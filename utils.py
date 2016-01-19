@@ -46,6 +46,8 @@ def makeTestCSV(fn):
     df = pd.concat((df, start, end), axis=1)
     df['start_minutes'] = df['start_hour'] * 60 + df['start_minute']
     df['end_minutes'] = df['end_hour'] * 60 + df['end_minute']
+    df['start_weekday'] = df['start_day'] % 7
+    df['end_weekday'] = df['end_day'] % 7
     return df
 
 def manhattan(t1, t2):
@@ -55,7 +57,8 @@ def euclidean(t1, t2):
     return np.sqrt((t1[0] - t2[0]) ** 2. + (t1[1] - t2[1]) ** 2.)
 
 def find_k_nearest_all(k):
-    coords = json.load(file('data/coord_dict.json'))
+    with open('data/coord_dict.json') as f:
+        coords = json.load(f)
     def find_k_nearest_sensor(sensor, k):
         out = np.array([utils.manhattan(coords['S' + str(sensor)], 
                                         coords['S' + str(i)]) for i in xrange(1, 56)]).argsort()[1:k + 1] + 1
