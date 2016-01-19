@@ -16,8 +16,9 @@ def expand_rows(df):
         temp_new_df.loc[:, 'sensor'] = 'S' + str(i)
         dfs.append(temp_new_df)
         
-    return (pd.concat(dfs, ignore_index=True)
-            .sort_values(['day', 'minutes', 'sensor']))
+    return (pd.concat(dfs)
+            .sort_values(['day', 'minutes', 'sensor'])
+            .reset_index(drop=True))
 
 def makeTrainCSVs(fn):
     df = pd.read_csv(fn)
@@ -63,3 +64,9 @@ def find_k_nearest_all(k):
     for i in xrange(1, 57):
         neighbors['S' + str(i)] = find_k_nearest_sensor(i, k)
     return neighbors
+
+def makeSubmission(preds, fn):
+    with open(fn, 'w') as f:
+        f.write('Index,Count\n')
+        for i, p in enumerate(preds):
+            f.write('{},{}\n'.format(i+1, p))
