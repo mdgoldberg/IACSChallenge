@@ -1,3 +1,4 @@
+import json
 import numpy as np
 import pandas as pd
 
@@ -15,7 +16,8 @@ def expand_rows(df):
         temp_new_df.loc[:, 'sensor'] = 'S' + str(i)
         dfs.append(temp_new_df)
         
-    return pd.concat(dfs).sort_values(['day', 'minutes', 'sensor'])
+    return (pd.concat(dfs, ignore_index=True)
+            .sort_values(['day', 'minutes', 'sensor']))
 
 def makeTrainCSVs(fn):
     df = pd.read_csv(fn)
@@ -29,7 +31,21 @@ def makeTrainCSVs(fn):
     return df, expand_rows(df)
 
 def makeTestCSV(fn):
-    pass
+    df = pd.read_csv(fn)
+    df.columns = [c.strip() for c in df.columns]
+    df.rename(columns={'Sensor ID': 'sensor_id', 'Start Time': 'start_time',
+                       'End Time': 'end_time'}, inplace=True)
+    df.drop('People Count', axis=1, inplace=True)
+    start = (df.start_time.astype(str).apply(
+        lambda d: getDHM(d, ['start_day', 'start_hour', 'start_minute'])
+    ).astype(int))
+    end = (df.end_time.astype(str).apply(
+        lambda d: getDHM(d, ['end_day', 'end_hour', 'end_minute'])
+    ).astype(int))
+    df = pd.concat((df, start, end), axis=1)
+    df['start_minutes'] = df['start_hour'] * 60 + df['start_minute']
+    df['end_minutes'] = df['end_hour'] * 60 + df['end_minute']
+    return df
 
 def manhattan(t1, t2):
     return abs(t1[0] - t2[0]) + abs(t1[1] - t2[1])
