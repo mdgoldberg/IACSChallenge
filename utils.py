@@ -56,9 +56,13 @@ def manhattan(t1, t2):
 def euclidean(t1, t2):
     return np.sqrt((t1[0] - t2[0]) ** 2. + (t1[1] - t2[1]) ** 2.)
 
-def find_k_nearest_all(k):
+def getCoords():
     with open('data/coord_dict.json') as f:
         coords = json.load(f)
+    return coords
+
+def find_k_nearest_all(k):
+    coords = getCoords()
     def find_k_nearest_sensor(sensor, k):
         out = np.array([utils.manhattan(coords['S' + str(sensor)], 
                                         coords['S' + str(i)]) for i in xrange(1, 56)]).argsort()[1:k + 1] + 1
