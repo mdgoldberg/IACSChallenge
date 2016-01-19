@@ -16,7 +16,8 @@ def expand_rows(df):
         temp_new_df.loc[:, 'sensor'] = 'S' + str(i)
         dfs.append(temp_new_df)
         
-    return pd.concat(dfs).sort_values(['day', 'minutes', 'sensor'])
+    return (pd.concat(dfs, ignore_index=True)
+            .sort_values(['day', 'minutes', 'sensor']))
 
 def makeTrainCSVs(fn):
     df = pd.read_csv(fn)
