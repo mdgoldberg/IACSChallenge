@@ -30,3 +30,9 @@ def makeTrainCSVs(fn):
 
 def makeTestCSV(fn):
     pass
+
+def manhattan(t1, t2):
+    return abs(t1[0] - t2[0]) + abs(t1[1] - t2[1])
+
+def euclidean(t1, t2):
+    return np.sqrt((t1[0] - t2[0]) ** 2. + (t1[1] - t2[1]) ** 2.)
