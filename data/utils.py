@@ -15,9 +15,9 @@ def expand_rows(df):
         temp_new_df['sensor'] = 'S' + str(i)
         dfs.append(temp_new_df)
         
-    return pd.concat(dfs)
+    return pd.concat(dfs).sort_values(['day', 'minutes', 'sensor'])
 
-def makeTrainCSVS(fn):
+def makeTrainCSVs(fn):
     df = pd.read_csv(fn)
     df = df.replace(-1, np.nan)
     df.columns = [c.strip() for c in df.columns]
@@ -26,9 +26,7 @@ def makeTrainCSVS(fn):
     df = pd.concat((df, times), axis=1)
     df['minutes'] = df['hour'] * 60 + df['minute']
     df['weekday'] = df['day'] % 7
-
     return df, expand_rows(df)
 
 def makeTestCSV(fn):
     pass
-
