@@ -10,9 +10,9 @@ def getDHM(raw_timestamp, index=['day', 'hour', 'minute']):
 def expand_rows(df):
     dfs = []
     for i in xrange(1, 57):
-        temp_new_df = df[[x for x in df.columns if x[0] != 'S']]
-        temp_new_df['value'] = df['S' + str(i)]
-        temp_new_df['sensor'] = 'S' + str(i)
+        temp_new_df = df.loc[:, [x for x in df.columns if x[0] != 'S']].copy()
+        temp_new_df.loc[:, 'value'] = df['S' + str(i)]
+        temp_new_df.loc[:, 'sensor'] = 'S' + str(i)
         dfs.append(temp_new_df)
         
     return pd.concat(dfs).sort_values(['day', 'minutes', 'sensor'])
