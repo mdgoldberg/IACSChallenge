@@ -7,7 +7,17 @@ def getDHM(raw_timestamp, index=['day', 'hour', 'minute']):
     minute = raw_timestamp[-2:]
     return pd.Series([day, hour, minute], index=index)
 
-def makeTrainCSV(fn):
+def expand_rows(df):
+    dfs = []
+    for i in xrange(1, 57):
+        temp_new_df = df[[x for x in df.columns if x[0] != 'S']]
+        temp_new_df['value'] = df['S' + str(i)]
+        temp_new_df['sensor'] = 'S' + str(i)
+        dfs.append(temp_new_df)
+        
+    return pd.concat(dfs)
+
+def makeTrainCSVS(fn):
     df = pd.read_csv(fn)
     df = df.replace(-1, np.nan)
     df.columns = [c.strip() for c in df.columns]
@@ -16,7 +26,9 @@ def makeTrainCSV(fn):
     df = pd.concat((df, times), axis=1)
     df['minutes'] = df['hour'] * 60 + df['minute']
     df['weekday'] = df['day'] % 7
-    return df
+
+    return df, expand_rows(df)
 
 def makeTestCSV(fn):
     pass
+
