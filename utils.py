@@ -36,6 +36,7 @@ def addDummyRows(df, hourCol):
             temp.ix[idx, hourCol] = h
             temp.ix[idx, 'sensor'] = 'S' + str(s)
     temp['isDummy'] = True
+    temp['isRestroom'] = True
     df = df.append(temp).reset_index(drop=True)
     df.ix[df.isDummy.isnull(), 'isDummy'] = False
     df.isDummy = df.isDummy.astype(bool)
@@ -103,8 +104,13 @@ def find_k_nearest_all(k):
         neighbors['S' + str(i)] = find_k_nearest_sensor(i, k)
     return neighbors
 
-def makeSubmission(preds, fn):
+def makeKaggleSubmission(preds, fn):
     with open(fn, 'w') as f:
         f.write('Index,Count\n')
         for i, p in enumerate(preds):
             f.write('{},{}\n'.format(i+1, p))
+
+def makeFinalSubmission(preds, fn):
+    with open(fn, 'w') as f:
+        for p in preds:
+            f.write('{}\n'.format(int(np.around(p))))
