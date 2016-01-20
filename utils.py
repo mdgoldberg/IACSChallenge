@@ -20,6 +20,14 @@ def expand_rows(df):
             .sort_values(['day', 'minutes', 'sensor'])
             .reset_index(drop=True))
 
+def addSensorColumns(df):
+    coords = getCoords()
+    df['Xcoord'] = df['sensor'].apply(lambda s: coords[s][0])
+    df['Ycoord'] = df['sensor'].apply(lambda s: coords[s][1])
+    df['isRestroom'] = df['sensor'].isin(['S6', 'S9', 'S12', 'S44'])
+    df['isStaircase'] = df['sensor'].isin(['S35', 'S42', 'S52'])
+    return df
+
 def makeTrainCSVs(fn):
     df = pd.read_csv(fn)
     df = df.replace(-1, np.nan)
@@ -29,12 +37,14 @@ def makeTrainCSVs(fn):
     df = pd.concat((df, times), axis=1)
     df['minutes'] = df['hour'] * 60 + df['minute']
     df['weekday'] = df['day'] % 7
-    return df, expand_rows(df)
+    df2 = expand_rows(df)
+    df2 = addSensorColumns(df2)
+    return df, df2
 
 def makeTestCSV(fn):
     df = pd.read_csv(fn)
     df.columns = [c.strip() for c in df.columns]
-    df.rename(columns={'Sensor ID': 'sensor_id', 'Start Time': 'start_time',
+    df.rename(columns={'Sensor ID': 'sensor', 'Start Time': 'start_time',
                        'End Time': 'end_time'}, inplace=True)
     df.drop('People Count', axis=1, inplace=True)
     start = (df.start_time.astype(str).apply(
@@ -48,6 +58,9 @@ def makeTestCSV(fn):
     df['end_minutes'] = df['end_hour'] * 60 + df['end_minute']
     df['start_weekday'] = df['start_day'] % 7
     df['end_weekday'] = df['end_day'] % 7
+    df = addSensorColumns(df)
+    df['isRestroom'] = df['sensor'].isin(['S6', 'S9', 'S12', 'S44'])
+    df['isStaircase'] = df['sensor'].isin(['S35', 'S42', 'S52'])
     return df
 
 def manhattan(t1, t2):
