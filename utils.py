@@ -34,7 +34,7 @@ def addDummyRows(df, hourCol):
         for s in xrange(1, 57):
             idx = 56*h + s - 1
             temp.ix[idx, hourCol] = h
-            temp.ix[idx, 'sensor'] = s
+            temp.ix[idx, 'sensor'] = 'S' + str(s)
     temp['isDummy'] = True
     df = df.append(temp).reset_index(drop=True)
     df.ix[df.isDummy.isnull(), 'isDummy'] = False
