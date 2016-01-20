@@ -49,6 +49,7 @@ def makeTrainCSVs(fn):
     times = df.raw_timestamp.astype(str).apply(getDHM).astype(int)
     df = pd.concat((df, times), axis=1)
     df['minutes'] = df['hour'] * 60 + df['minute']
+    df['hours'] = (df['day'] - 1) * 24 + df['hour']
     df['weekday'] = df['day'] % 7
     df2 = expand_rows(df)
     df2 = addSensorColumns(df2)
@@ -69,7 +70,9 @@ def makeTestCSV(fn):
     ).astype(int))
     df = pd.concat((df, start, end), axis=1)
     df['start_minutes'] = df['start_hour'] * 60 + df['start_minute']
+    df['start_hours'] = (df['start_day'] - 1) * 24 + df['start_hour']
     df['end_minutes'] = df['end_hour'] * 60 + df['end_minute']
+    df['end_hours'] = (df['end_day'] - 1) * 24 + df['end_hour']
     df['start_weekday'] = df['start_day'] % 7
     df['end_weekday'] = df['end_day'] % 7
     df = addSensorColumns(df)
@@ -92,8 +95,8 @@ def getCoords():
 def find_k_nearest_all(k):
     coords = getCoords()
     def find_k_nearest_sensor(sensor, k):
-        out = np.array([utils.manhattan(coords['S' + str(sensor)], 
-                                        coords['S' + str(i)]) for i in xrange(1, 56)]).argsort()[1:k + 1] + 1
+        out = np.array([manhattan(coords['S' + str(sensor)], 
+                                  coords['S' + str(i)]) for i in xrange(1, 56)]).argsort()[1:k + 1] + 1
         return map(lambda x: 'S' + str(x), out)    
     neighbors = {}
     for i in xrange(1, 57):
