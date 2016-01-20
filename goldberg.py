@@ -32,11 +32,12 @@ newdf = utils.addSensorColumns(newdf)
 newdf = utils.addDummyRows(newdf, 'hour')
 day_dummies = pd.get_dummies(newdf.weekday, prefix='day').iloc[:, :-1]
 sens_dummies = pd.get_dummies(newdf.sensor).iloc[:, :-1]
+sens_dummies = np.multiply(sens_dummies, newdf.hours.apply(hoursMeansDict.get)[:, np.newaxis])
 newdf = pd.concat((newdf, day_dummies, sens_dummies, topdf), axis=1)
 comp_df = newdf.dropna()
 Xdf = comp_df.ix[:, ['Xcoord', 'Ycoord', 'hour', 'neighbor_avg', 'total_mean', 'isRestroom', 'isStaircase'] +
                  list(day_dummies.columns)
-                 # + list(sens_dummies.columns)
+                 + list(sens_dummies.columns)
                  + list(topdf.columns)
                  ]
 Y = comp_df.value.copy()
@@ -59,12 +60,17 @@ print np.mean(absErrs), np.median(absErrs)
 
 day_dummies = pd.get_dummies(testdf.start_weekday, prefix='day').iloc[:, :-1]
 sens_dummies = pd.get_dummies(testdf.sensor).iloc[:, :-1]
-newtest = pd.concat((testdf, day_dummies, sens_dummies), axis=1)
+newtest = pd.concat((testdf, day_dummies), axis=1)
+good_idx = ~newtest.isDummy
 newtest = newtest.ix[~newtest.isDummy]
 testHours = newtest['start_hours'].astype(int)
 testSensors = newtest.sensor.str[1:].astype(int) - 1
 newtest['neighbor_avg'] = [neighbor_df.ix[h, s] for h, s in zip(testHours, testSensors)]
 newtest['total_mean'] = newtest.start_hours.apply(hoursMeansDict.get)
+sens_dummies = sens_dummies.ix[good_idx]
+sens_dummies = np.multiply(sens_dummies, newtest.start_hours.apply(hoursMeansDict.get)[:, np.newaxis])
+newtest = pd.concat((newtest, sens_dummies), axis=1)
+
 closestSensors = newtest.sensor.apply(closeDict.get).values
 topdf = pd.DataFrame([pd.Series([hsDict[h, s] for s in l]).dropna().values[:30] for h, l in zip(testHours, closestSensors)])
 topdf.columns = ['top_{}'.format(i) for i in xrange(30)]
@@ -72,7 +78,7 @@ newtest = pd.concat((newtest, topdf), axis=1)
 comp_test = newtest.dropna()
 Xtest = comp_test.ix[:, ['Xcoord', 'Ycoord', 'start_hour', 'neighbor_avg', 'total_mean', 'isRestroom', 'isStaircase'] + 
                      list(day_dummies.columns)
-                     # + list(sens_dummies.columns)
+                     + list(sens_dummies.columns)
                      + list(topdf.columns)
                      ]
 
