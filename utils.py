@@ -88,7 +88,7 @@ def euclidean(t1, t2):
     return np.sqrt((t1[0] - t2[0]) ** 2. + (t1[1] - t2[1]) ** 2.)
 
 def getCoords():
-    with open('data/coord_dict.json') as f:
+    with open('data-final/coord_dict.json') as f:
         coords = json.load(f)
     return coords
 
