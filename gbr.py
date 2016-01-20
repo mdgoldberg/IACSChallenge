@@ -24,12 +24,12 @@ dummies = pd.get_dummies(newdf.weekday, prefix='day').iloc[:, :-1]
 newdf = pd.concat((newdf, dummies), axis=1)
 comp_df = newdf.dropna()
 Xdf = comp_df.ix[:, ['Xcoord', 'Ycoord', 'hour', 'neighbor_avg', 'isRestroom', 'isStaircase'] +
-                 [c for c in comp_df.columns if c.startswith('day_')]]
+                 [c for c in comp_df.columns if c in dummies.columns]]
 Y = comp_df.value.copy()
 
 model = ensemble.GradientBoostingRegressor(n_estimators=200, loss='huber', max_depth=5)
-grid = {'learning_rate': [0.1, 0.2, 0.25, 0.3, 0.35], 'alpha': [0.8, 0.85, 0.9, 0.95])
-model = GridSearchCV(model, grid, refit=True, n_jobs=-1)
+grid = {'learning_rate': [0.1, 0.2, 0.25, 0.3, 0.35], 'alpha': [0.8, 0.85, 0.9, 0.95]}
+model = GridSearchCV(model, grid, refit=True, n_jobs=-1, cv=4)
 Xtrain, Xtest, ytrain, ytest = train_test_split(Xdf, Y, test_size=0.1)
 print 'fitting...'
 model.fit(Xtrain, ytrain)

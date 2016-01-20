@@ -24,10 +24,12 @@ dummies = pd.get_dummies(newdf.weekday, prefix='day').iloc[:, :-1]
 newdf = pd.concat((newdf, dummies), axis=1)
 comp_df = newdf.dropna()
 Xdf = comp_df.ix[:, ['Xcoord', 'Ycoord', 'hour', 'neighbor_avg', 'isRestroom', 'isStaircase'] +
-                 [c for c in comp_df.columns if c.startswith('day_')]]
+                 [c for c in comp_df.columns if c in dummies.columns]]
 Y = comp_df.value.copy()
 
-model = ensemble.RandomForestRegressor(n_estimators=200, n_jobs=-1)
+model = ensemble.RandomForestRegressor(n_jobs=-1)
+grid = {'n_estimators': [150, 200, 250], 'max_features': ['auto', 'sqrt', 'log2', 0.25, 0.5, 0.75]}
+model = GridSearchCV(model, grid, refit=True, n_jobs=-1, cv=4)
 Xtrain, Xtest, ytrain, ytest = train_test_split(Xdf, Y, test_size=0.1)
 print 'fitting...'
 model.fit(Xtrain, ytrain)
