@@ -1,5 +1,6 @@
 import pandas as pd, numpy as np, matplotlib.pyplot as plt, utils, pickle
 from sklearn import ensemble
+from sklearn.grid_search import GridSearchCV
 from sklearn.cross_validation import train_test_split
 
 df1, df2 = utils.makeTrainCSVs('data/train.txt')
@@ -23,13 +24,17 @@ dummies = pd.get_dummies(newdf.weekday, prefix='day').iloc[:, :-1]
 newdf = pd.concat((newdf, dummies), axis=1)
 comp_df = newdf.dropna()
 Xdf = comp_df.ix[:, ['Xcoord', 'Ycoord', 'hour', 'neighbor_avg', 'isRestroom', 'isStaircase'] +
-                 [c for c in comp_df.columns if c.startswith('day_')]]
+                 [c for c in comp_df.columns if c in dummies.columns]]
 Y = comp_df.value.copy()
 
-rfr = ensemble.RandomForestRegressor(n_estimators=100, n_jobs=-1)
+# model = ensemble.RandomForestRegressor(n_estimators=200, n_jobs=-1)
+model = ensemble.GradientBoostingRegressor(n_estimators=200, loss='huber', max_depth=5)
+grid = {'learning_rate': [0.15, 0.2, 0.25, 0.3], 'alpha': [0.8, 0.85, 0.9, 0.95, 0.99]}
+model = GridSearchCV(model, grid, refit=True, n_jobs=-1)
 Xtrain, Xtest, ytrain, ytest = train_test_split(Xdf, Y, test_size=0.1)
-rfr.fit(Xtrain, ytrain)
-cv_preds = rfr.predict(Xtest)
+print 'fitting...'
+model.fit(Xtrain, ytrain)
+cv_preds = model.predict(Xtest)
 absErrs = np.abs(cv_preds - ytest).values
 print np.mean(absErrs), np.median(absErrs)
 
@@ -43,4 +48,7 @@ comp_test = newtest.dropna()
 Xtest = comp_test.ix[:, ['Xcoord', 'Ycoord', 'start_hour', 'neighbor_avg', 'isRestroom', 'isStaircase'] + 
                         [c for c in comp_test.columns if c.startswith('day_')]]
 
-preds = rfr.predict(Xtest)
+preds = model.predict(Xtest)
+fi = pd.Series(dict(zip(Xtest.columns, model.best_estimator_.feature_importances_))).sort_values(ascending=True)
+print fi
+print model.best_estimator_

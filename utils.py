@@ -28,6 +28,19 @@ def addSensorColumns(df):
     df['isStaircase'] = df['sensor'].isin(['S35', 'S42', 'S52'])
     return df
 
+def addDummyRows(df, hourCol):
+    temp = pd.DataFrame(index=xrange(24*56), columns=[hourCol, 'sensor', 'isDummy'])
+    for h in xrange(24):
+        for s in xrange(1, 57):
+            idx = 56*h + s - 1
+            temp.ix[idx, hourCol] = h
+            temp.ix[idx, 'sensor'] = s
+    temp['isDummy'] = True
+    df = df.append(temp).reset_index(drop=True)
+    df.ix[df.isDummy.isnull(), 'isDummy'] = False
+    df.isDummy = df.isDummy.astype(bool)
+    return df
+
 def makeTrainCSVs(fn):
     df = pd.read_csv(fn)
     df = df.replace(-1, np.nan)
@@ -39,6 +52,7 @@ def makeTrainCSVs(fn):
     df['weekday'] = df['day'] % 7
     df2 = expand_rows(df)
     df2 = addSensorColumns(df2)
+    df2 = addDummyRows(df2, 'hour')
     return df, df2
 
 def makeTestCSV(fn):
@@ -61,6 +75,7 @@ def makeTestCSV(fn):
     df = addSensorColumns(df)
     df['isRestroom'] = df['sensor'].isin(['S6', 'S9', 'S12', 'S44'])
     df['isStaircase'] = df['sensor'].isin(['S35', 'S42', 'S52'])
+    df = addDummyRows(df, 'start_hour')
     return df
 
 def manhattan(t1, t2):
